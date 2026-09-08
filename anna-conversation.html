@@ -66,12 +66,12 @@ video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;backgrou
 
   <div class="panneau" id="pPrenom">
     <div class="consigne">Anna te demande ton prénom</div>
-    <form class="saisie" id="fPrenom"><input id="prenom" type="text" maxlength="30" placeholder="Ton prénom…" autocomplete="off"><button type="submit">Valider</button></form>
+    <div class="saisie" id="fPrenom"><input id="prenom" type="text" maxlength="30" placeholder="Ton prénom…" autocomplete="off"><button type="button" id="bPrenom">Valider</button></div>
   </div>
 
   <div class="panneau" id="pProjet">
     <div class="consigne">Décris ton projet à Anna en quelques mots</div>
-    <form class="saisie" id="fProjet"><textarea id="projet" maxlength="300" placeholder="Ex. : ouvrir un atelier de réparation de vélos dans mon quartier…"></textarea><button type="submit">Envoyer</button></form>
+    <div class="saisie" id="fProjet"><textarea id="projet" maxlength="300" placeholder="Ex. : ouvrir un atelier de réparation de vélos dans mon quartier…"></textarea><button type="button" id="bProjet">Envoyer</button></div>
   </div>
 
   <div class="ecran vu" id="debut">
@@ -145,23 +145,31 @@ function proposeChoix(options){
 }
 
 /* prénom */
-$('#fPrenom').addEventListener('submit',e=>{
-  e.preventDefault();
+/* pas de <form> : dans l'iframe Genially (sandbox sans allow-forms) l'évènement submit n'arrive jamais */
+let prenomEnvoye=false;
+function validePrenom(){
+  if(prenomEnvoye)return;
   const v=$('#prenom').value.trim(); if(!v){$('#prenom').focus();return}
+  prenomEnvoye=true;
   etat.prenom=v.charAt(0).toUpperCase()+v.slice(1);
   try{localStorage.setItem('anna.prenom',etat.prenom)}catch(x){}
   cache();
   const b=$('#bulle');b.textContent='Enchantée, '+etat.prenom+' !';b.classList.add('vu');
   setTimeout(()=>{b.classList.remove('vu');setTimeout(()=>joue('K4'),300)},1700);
-});
+}
+$('#bPrenom').addEventListener('click',validePrenom);
+$('#prenom').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();validePrenom()}});
 /* projet */
-$('#projet').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#fProjet').requestSubmit()}});
-$('#fProjet').addEventListener('submit',e=>{
-  e.preventDefault();
+let projetEnvoye=false;
+function valideProjet(){
+  if(projetEnvoye)return;
   const v=$('#projet').value.trim(); if(v.length<3){$('#projet').focus();return}
+  projetEnvoye=true;
   etat.projet=v; try{localStorage.setItem('anna.projet',v)}catch(x){}
   joue('K5');
-});
+}
+$('#bProjet').addEventListener('click',valideProjet);
+$('#projet').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();valideProjet()}});
 
 $('#commencer').addEventListener('click',()=>{
   $('#debut').classList.remove('vu');
